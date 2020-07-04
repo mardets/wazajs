@@ -1,134 +1,272 @@
-var gulp = require("gulp");
-var browserify = require("browserify");
-var sass = require('gulp-sass');
+//Load all the required objects which will be used by
+//all the functions exposed
+var gulp = require('gulp');
+var mocha = require('gulp-mocha');
+var browserify = require('browserify');
+var watchify = require('watchify');
+//var sass = require('gulp-sass');
 var autoprefixer = require('gulp-autoprefixer');
-var eslint = require('gulp-eslint');
-var jasmine = require('gulp-jasmine-phantom');
-var concat = require('gulp-concat');
-const Imagemin = require('imagemin');
-const imageminPngquant = require('imagemin-pngquant');
+var gutil = require('gulp-util');
+var notify = require('gulp-notify');
 var source = require('vinyl-source-stream');
-var tsify = require("tsify");
+var tsify = require('tsify');
 var uglify = require('gulp-uglify');
 var sourcemaps = require('gulp-sourcemaps');
 var buffer = require('vinyl-buffer');
+var serve   = require('browser-sync');
+var merge         = require('merge-stream');
+var sync = require('run-sequence');
+var browser = require('browser-sync');
+//var stylus = require('gulp-stylus');
+var templateCache = require('gulp-template-cache');
 var path = require('path');
 var yargs = require('yargs');
+var template = require('gulp-template');
+var rename = require('gulp-rename');
+
 var paths = {
-    pages: ['src/*.html'],
-    js: ['src/**/*.js']
+  blankComponents: path.join(__dirname, 'scaffold', 'component/**/*.**'),
+  blankServices: path.join(__dirname, 'scaffold', 'service/**/*.**'),
+  viewFiles: 'app/**/*.html'
 };
 
-gulp.task("html", function () {
-    return gulp.src(paths.pages)
-        .on('error', interceptErrors)
-        .pipe(gulp.dest("build"));
-});
+var browserify = browserify({
+    basedir: '.',
+    debug: true,
+    entries: ['app/main.ts'],
+    cache: {},
+    packageCache: {}
+}).plugin(tsify);
 
+function bundle() {
+    return browserify
+        .transform('babelify', {
+            extensions: ['.ts']
+        })
+        .bundle()
+        .on('error', interceptErrors)
+        .pipe(source('main.js'))
+        .pipe(buffer())
+        .pipe(sourcemaps.init({loadMaps: true}))
+        //.pipe(uglify())
+        .pipe(sourcemaps.write('./'))
+        .pipe(gulp.dest("build"));
+}
+
+// That Object is used to intercept errors
+// (variable declaration, object which doesn't exist, etc..)
 var interceptErrors = function(error) {
   var args = Array.prototype.slice.call(arguments);
-
   // Send error to notification center with gulp-notify
   notify.onError({
     title: 'Compile Error',
     message: '<%= error.message %>'
   }).apply(this, args);
-
+  console.log('Error at :' + error);
   // Keep gulp from hanging on this task
   this.emit('end');
 };
 
-gulp.task("browserify", function () {
-    return browserify({
-        basedir: '.',
-        debug: true,
-        entries: ['src/app/Account.ts'],
-        cache: {},
-        packageCache: {}
-    })
-    .plugin(tsify)
-    .transform('babelify', {
-        presets: ['es2015'],
-        extensions: ['.ts']
-    })
-    .bundle()
-    .on('error', interceptErrors)
-    .pipe(source('bundle.js'))
-    .pipe(buffer())
-    .pipe(sourcemaps.init({loadMaps: true}))
-    //.pipe(uglify())
-    .pipe(sourcemaps.write('./'))
-    .pipe(gulp.dest("build"));
+// That Object is used to notify errors
+var build = (source, output, cb) => {
+	return gulp.src([source])
+	  .on('error', interceptErrors)
+	  .pipe(cb)
+		.pipe(gulp.dest(output));
+}
+
+const resolveToComponents = (glob = '') => {
+  return path.join('app', '', glob); // app/{glob}
+};
+
+const resolveToServices = (glob = '') => {
+  return path.join('app', '', glob); // app/{glob}
+};
+
+const name = yargs.argv.name;
+const parent = yargs.argv.parent || '';
+const route = !!yargs.argv.route;
+
+/**
+ * Change temp name containing '-' char
+ * @param {String} val - value of the temp name
+ */
+var changeVal = (val) => {
+  if (val.includes('-')) {
+    return val.slice(0, val.indexOf('-')) + cap(val.substr(val.indexOf('-') + 1));
+  }
+  return val;
+};
+
+/**
+ * Set temp name containing '-' char to parent name
+ * @param {String} val - value of the temp name
+ */
+var SetToParentVal = (val) => {
+  if (val.includes('-')) {
+    return val.slice(0, val.indexOf('-'));
+  }
+  return val;
+};
+
+/**
+ * Change temp name containing '-' char
+ * @param {String} val - value of the temp name
+ */
+var componentPath = (val) => {
+  val = '';
+  return val;
+};
+
+/**
+ * Set temp name to upcase
+ * @param {String} val - value of the temp name
+ */
+var cap = (val) => {
+  if (val.includes('-')) {
+    var newVal = val.charAt(0).toUpperCase() + val.slice(1);
+    return changeVal(newVal);
+  }
+  return val.charAt(0).toUpperCase() + val.slice(1);
+};
+
+const generateComponent = () => {
+  const destPathComponent = path.join(resolveToComponents(''), parent, name);
+  gulp.src(paths.blankComponents)
+    .pipe(template({
+      name: name,
+      parent: parent,
+      upParent: cap(parent),
+      upName: cap(name).replace(cap(name).charAt(0), cap(name).charAt(0).toLowerCase()),
+      upCaseName: cap(name),
+      route
+    }))
+    .pipe(rename((path) => {
+      path.basename = path.basename.replace('temp', name);
+    }))
+    .pipe(gulp.dest(destPathComponent));
+};
+
+const generateService = () => {
+  const destPathService = path.join(resolveToServices(''), parent, name);
+  gulp.src(paths.blankServices)
+    .pipe(template({
+      name: name,
+      upCaseName: cap(name),
+      route
+    }))
+    .pipe(rename((path) => {
+      path.basename = path.basename.replace('temp', name);
+    }))
+    .pipe(gulp.dest(destPathService));
+};
+
+gulp.task('component', () => {
+  generateComponent(); // Web components
 });
 
-gulp.task('copy-images', function() {
-	gulp.src('img/*')
-		.pipe(imagemin({
-            progressive: true,
-            use: [pngquant()]
-        }))
-		.pipe(gulp.dest('dist/img'));
+gulp.task('service', () => {
+  generateService(); // Web components
 });
 
-gulp.task('styles', function() {
-	gulp.src('sass/**/*.scss')
-		.pipe(sass({
-			outputStyle: 'compressed'
-		}).on('error', sass.logError))
-		.pipe(autoprefixer({
-			browsers: ['last 2 versions']
-		}))
-		.pipe(gulp.dest('dist/css'))
-		.pipe(browserSync.stream());
+// That task allows to identify all test source 
+// and report errors in case using mocha
+gulp.task('test', () => {
+  return gulp.src(['www/test/unit/**/*.spec.js'], { read: false })
+     .pipe(mocha({ reporter: 'spec' }))
+     //.on('error', util.log);
+})
+
+gulp.task('browserify', function() {
+  return bundle();
 });
 
-gulp.task('lint', function () {
-	return gulp.src(['js/**/*.js'])
-		// eslint() attaches the lint output to the eslint property
-		// of the file object so it can be used by other modules.
-		.pipe(eslint())
-		// eslint.format() outputs the lint results to the console.
-		// Alternatively use eslint.formatEach() (see Docs).
-		.pipe(eslint.format())
-		// To have the process exit with an error code (1) on
-		// lint error, return the stream and pipe to failOnError last.
-		.pipe(eslint.failOnError());
+//task which allows to minify all the css existing file in 
+// a file which will be named 'app.css' to the 'build' directory
+gulp.task('css', () => {
+  return gulp.src(['public/stylesheets/*.css'])
+	  .on('error', interceptErrors)
+	  .pipe(concat('app.min.css'))
+	  .pipe(minifyCss())
+	  .pipe(gulp.dest('build/css'));
+  
+})
+
+//task which allows to minify all the pug existing file in 
+// a html file to the 'build' directory
+gulp.task('html', () => {
+  return gulp.src(['_views/**/*.pug'])
+	  .on('error', interceptErrors)
+	  //.pipe(pug())
+	  .pipe(gulp.dest('build/html'));
+  
+})
+
+//task which allows to minify all the js existing file in 
+// a file which will be named 'app.js' to the 'build' reportory
+gulp.task('js', () => {
+  return gulp.src(['public/javascripts/**/*.js'])
+	  .on('error', interceptErrors)
+	  .pipe(concat('app.min.js'))
+	  .pipe(minify())
+	  .pipe(gulp.dest('build/js'));
+  
+})
+
+gulp.task('templates', function() {
+  return gulp.src(paths.viewFiles)
+    .pipe(templateCache())
+    .pipe(gulp.dest('app/view'));
 });
 
-gulp.task('tests', function () {
-	gulp.src('tests/spec/extraSpec.js')
-		.pipe(jasmine({
-			integration: true,
-			vendor: 'js/**/*.js'
-		}));
-});
+//watch all the files, we use in development
+// by integrating the task 'test' created for the mocha
+// reporter so that to log errors
+gulp.task('watchTests', () => {
+  gulp.watch([
+    'app.js',
+    'models/**/*.js',
+    'controllers/**/*.js',
+    'services/**/*.js',
+    'helpers/*.js',
+    'test/integration/*.spec.js'], ['test']);
+})
 
-// This task is used for building production ready
-// minified JS/CSS files into the dist/ folder
-gulp.task('build', ['html', 'browserify'], function() {
-  var html = gulp.src("build/index.html")
-                 .pipe(gulp.dest('./dist/'));
+gulp.task('unitTests', () => {
+  gulp.watch([
+    'www/main/application/**/*.js',
+    'www/main/core/**/*.js',
+    'www/main/provider/**/*.js',
+    'www/test/unit/**/*.spec.js'], ['test']);
+})
 
-  var js = gulp.src("build/main.js")
-               .pipe(uglify())
-               .pipe(gulp.dest('./dist/'));
-
-  return merge(html,js);
-});
-
-gulp.task('default', ['html', 'browserify', 'copy-images', 'styles', 'lint'], function() {
-
-  browserSync.init(['./build/**/**.**'], {
-    server: "./build",
-    port: 3000,
+gulp.task('watchViews', () => {
+  browserSync.init([], {
+    server: "/",
+    port: 8000,
     notify: false,
     ui: {
-      port: 4001
+      port: 8011
     }
   });
+  gulp.watch(['views/**/*.pug', 'public/js/**/*.js', 'public/css/**/*.css'], ['html', 'css', 'js'])
+})
 
-  gulp.watch("src/index.html", ['html']);
-  gulp.watch(jsFiles, ['browserify']);
-gulp.watch('sass/**/*.scss', ['styles']);
-	gulp.watch('js/**/*.js', ['lint']);
+gulp.task('server', () => {
+  serve({
+    port: process.env.PORT || 5000,
+    open: false,
+    server: { baseDir: './build' }
+  });
 });
+
+gulp.task('watcher', function() {
+  gulp.watch(['app/**/*.ts'], ['browserify', browser.reload]);
+  gulp.watch(['lib/**/*.ts'], ['browserify']);
+});
+
+
+//Start the server with watching mode
+gulp.task('default', (done) => {
+  sync('browserify', 'server', 'watcher', done);
+})

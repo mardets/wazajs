@@ -1,6 +1,10 @@
 import { ApplicationController } from './controller/application';
 import { ApplicationLayout } from './layout/application';
 import { Layout } from './layout/layout';
-import { CrudRepository } from './repository/crud';
+//import { CrudRepository } from './repository/crud';
 
-export default ApplicationModule;
+export declare namespace ApplicationModule{
+	var applicationController : ApplicationController;
+	var applicationLayout : ApplicationLayout;
+	var layout : Layout;
+};
