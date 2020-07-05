@@ -3,14 +3,12 @@ import { Path } from '../../core/config/path';
 import { Location } from '../../core/config/location';
 import { Layout } from '../layout/layout';
 import { Helper } from '../../core/util/helper';
-import { Resources } from '../../../app/resources';
 
 export class ApplicationController {
   location:Location;
   hash: Hash;
   path: Path;
   resources: any[];
-  document: any;
   
   constructor(private layout: Layout) {
     this.resources = [];
@@ -19,27 +17,13 @@ export class ApplicationController {
 	this.location = new Location();
   }
 
-  /*init(layout: Layout) {
-	console.log("Init method for starting application instance");
-    this.getResources();
-    this.displayLayout(this.layout, this.hash.getName());
-	return this;
-  }*/
-
   displayLayout(layout: Layout, hashname: string, resource?: any, title?: string, callback?: Function) {
-    //this.hash.setName(hashname);
-	/*if(this.hash.getName() === undefined) {
-      this.hash.setName(window.location.hash || '');
-    }*/
     let layoutToDisplay:any = layout;
-    //this.path.setName(window.location.pathname + hashname.substr(2, hashname.length -1));
-	let path:string = '/' + hashname;
-    layoutToDisplay.setViewLayout(/*this.path.getName()*/path, title, this.setTemplate || callback, resource);
-  }
-
-  getChildInstances(): any[] {
-        //return Resources.list(this.layout);
-return [];
+	let path = '/' + hashname;
+	if(path.charAt(2) === '/') {
+		path = path.substring(2, path.length);
+	}
+    layoutToDisplay.setViewLayout(path, title, this.setTemplate || callback, resource);
   }
 
   getResources(): any[] {
@@ -54,12 +38,10 @@ return [];
 	  this.layout = layout;
   }
   
-  render(template: string, type: any, title?: string) {
-	if(title !== '' || title !== undefined) {
-		this.location.setTitle(title);
-	}
-    var contentEl = document.querySelector('.ui-view');
+  render(template: string, title?: string) {
+    var contentEl = window.document.querySelector('.ui-view');
     contentEl.innerHTML = template;
+	window.document.querySelector('title').textContent = title;
   }
   
   setResources(resource: any) {
@@ -69,14 +51,20 @@ return [];
   }
   
   static reload(layout: Layout, hash: string, title?: string) {
+	
     this.prototype.displayLayout(layout, hash, this, title, this.prototype.setTemplate);
+	window.location.reload();
   }
   
-  setTemplate(template: string, clazz: any, title?: string) {
-    for (let i = 0; i < this.getResources().length; i++) {
-      if (this.getResources()[i].constructor.name
-              .toLowerCase().indexOf(clazz.hash) === 0) {
-        this.getResources()[i].render(template, clazz, title);
+  setTemplate(template: string, clazz: any, hashname?:string) {
+	let resources = JSON.parse(localStorage.getItem('resources'));
+	for (let i = 0; i < resources.length; i++) {
+      if (resources[i].hash.name.indexOf(hashname) === 0) {
+		if(clazz.constructor.name !== 'ApplicationController') {
+			clazz.render(template, resources[i].location.title);
+		} else {
+			clazz.prototype.render(template, resources[i].location.title);
+		}
         break;
       }
     }

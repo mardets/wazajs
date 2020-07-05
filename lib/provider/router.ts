@@ -1,4 +1,4 @@
-import { CacheTpl } from '../../app/view/templates';
+import { CacheTpl } from '../../www/view/templates';
 
 export class RouterProvider {
   routes: any[];

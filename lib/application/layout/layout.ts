@@ -30,7 +30,10 @@ export class Layout {
 	} else {
 		this.layoutView = cacheTpl['layout\layout.html'];
 	}
-	this.page.setCacheTpl(pathuri, pathuri.substring(1, pathuri.length), this.layoutView, cb, resource);
+	setTimeout(() => {
+		this.page.setCacheTpl(pathuri, pathuri.substring(1, pathuri.length), this.layoutView, cb, resource);
+	}, 1100)
+	
   }
 
   getPage():  PageProvider {

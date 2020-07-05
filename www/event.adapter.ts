@@ -1,15 +1,12 @@
-import { ApplicationController } from '../application/controller/application';
-import { Layout } from '../application/layout/layout';
-import { RouterProvider } from './router';
-import { Helper } from '../core/util/helper';
-export class PageProvider {
+import { AppController } from './application.controller';
+import { Layout } from '../lib/application/layout/layout';
+import { PageProvider } from '../lib/provider/page';
+import { RouterProvider } from '../lib/provider/router';
+import { Helper } from '../lib/core/util/helper';
+export class EventAdapter extends PageProvider {
 
-  cacheTpl: any;
-  htmlView: string;
-  layoutBuilder: any;
-  url: string;
-
-  constructor(private router: RouterProvider) {
+  constructor(router: RouterProvider) {
+	  super(router);
 	this.htmlView = '';
 	this.url = window.location.href;
 	this.layoutBuilder = {};
@@ -19,7 +16,7 @@ export class PageProvider {
   setCacheTpl(url: string, hashname:string, html: string, callback?: Function, resource?: any) {
     if(url !== '/') {
       this.layoutTemplate(this.cacheTpl['layout\layout.html'], this.layoutBuilder);
-      callback(html, resource, hashname);
+      callback(html, resource);
     }
     else {
       this.layoutTemplate(html, this.layoutBuilder);
@@ -92,10 +89,7 @@ export class PageProvider {
     let aList = window.document.querySelectorAll(tag);
     for(let i = 0; i < aList.length; i++) {
       aList.item(i).addEventListener('click', (event:any) => {
-		let tag = event.currentTarget.textContent;
-		window.location.assign('http://localhost:5000/#/' + tag)
-        ApplicationController.reload(new Layout(this), tag);
-		
+        AppController.reload(new Layout(this), event.currentTarget.textContent);
       });
     }
   }

@@ -24,16 +24,19 @@ var yargs = require('yargs');
 var template = require('gulp-template');
 var rename = require('gulp-rename');
 
+var src = './www'; //your code source
+
 var paths = {
   blankComponents: path.join(__dirname, 'scaffold', 'component/**/*.**'),
   blankServices: path.join(__dirname, 'scaffold', 'service/**/*.**'),
-  viewFiles: 'app/**/*.html'
+  viewFiles: src + '/**/*.html', //path to html files
+  tsFiles: src + '/**/*.ts' //path to ts files
 };
 
 var browserify = browserify({
     basedir: '.',
     debug: true,
-    entries: ['app/main.ts'],
+    entries: ['www/main.ts'], 
     cache: {},
     packageCache: {}
 }).plugin(tsify);
@@ -76,11 +79,11 @@ var build = (source, output, cb) => {
 }
 
 const resolveToComponents = (glob = '') => {
-  return path.join('app', '', glob); // app/{glob}
+  return path.join(src, '', glob); // src/{glob}
 };
 
 const resolveToServices = (glob = '') => {
-  return path.join('app', '', glob); // app/{glob}
+  return path.join(src, '', glob); // src/{glob}
 };
 
 const name = yargs.argv.name;
@@ -172,7 +175,7 @@ gulp.task('service', () => {
 // That task allows to identify all test source 
 // and report errors in case using mocha
 gulp.task('test', () => {
-  return gulp.src(['www/test/unit/**/*.spec.js'], { read: false })
+  return gulp.src(['test/www/test/unit/**/*.spec.js'], { read: false })
      .pipe(mocha({ reporter: 'spec' }))
      //.on('error', util.log);
 })
@@ -192,31 +195,10 @@ gulp.task('css', () => {
   
 })
 
-//task which allows to minify all the pug existing file in 
-// a html file to the 'build' directory
-gulp.task('html', () => {
-  return gulp.src(['_views/**/*.pug'])
-	  .on('error', interceptErrors)
-	  //.pipe(pug())
-	  .pipe(gulp.dest('build/html'));
-  
-})
-
-//task which allows to minify all the js existing file in 
-// a file which will be named 'app.js' to the 'build' reportory
-gulp.task('js', () => {
-  return gulp.src(['public/javascripts/**/*.js'])
-	  .on('error', interceptErrors)
-	  .pipe(concat('app.min.js'))
-	  .pipe(minify())
-	  .pipe(gulp.dest('build/js'));
-  
-})
-
 gulp.task('templates', function() {
   return gulp.src(paths.viewFiles)
     .pipe(templateCache())
-    .pipe(gulp.dest('app/view'));
+    .pipe(gulp.dest('src/view'));
 });
 
 //watch all the files, we use in development
@@ -234,22 +216,10 @@ gulp.task('watchTests', () => {
 
 gulp.task('unitTests', () => {
   gulp.watch([
-    'www/main/application/**/*.js',
-    'www/main/core/**/*.js',
-    'www/main/provider/**/*.js',
-    'www/test/unit/**/*.spec.js'], ['test']);
-})
-
-gulp.task('watchViews', () => {
-  browserSync.init([], {
-    server: "/",
-    port: 8000,
-    notify: false,
-    ui: {
-      port: 8011
-    }
-  });
-  gulp.watch(['views/**/*.pug', 'public/js/**/*.js', 'public/css/**/*.css'], ['html', 'css', 'js'])
+    'test/www/main/application/**/*.js',
+    'test/www/main/core/**/*.js',
+    'test/www/main/provider/**/*.js',
+    'test/www/test/unit/**/*.spec.js'], ['test']);
 })
 
 gulp.task('server', () => {
@@ -261,7 +231,7 @@ gulp.task('server', () => {
 });
 
 gulp.task('watcher', function() {
-  gulp.watch(['app/**/*.ts'], ['browserify', browser.reload]);
+  gulp.watch([paths.tsFiles, paths.viewFiles], ['browserify', 'templates', browser.reload]);
   gulp.watch(['lib/**/*.ts'], ['browserify']);
 });
 
