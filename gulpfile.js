@@ -198,7 +198,7 @@ gulp.task('css', () => {
 gulp.task('templates', function() {
   return gulp.src(paths.viewFiles)
     .pipe(templateCache())
-    .pipe(gulp.dest('src/view'));
+    .pipe(gulp.dest(src + '/view'));
 });
 
 //watch all the files, we use in development
