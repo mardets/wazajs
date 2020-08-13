@@ -8,11 +8,11 @@ declare namespace Waza {
 			render(template: string, clazz?: any): void;
 		}
 		
-		interface CrudRepository<T, TId> {
-			findById(id: TId): T;
+		interface CrudRepository<T, String> {
+			findById(id: String): T;
 			create(item: T): T;
-			findAll(): T[];
-			update(id: TId, item?: T): T;
+			findAll(): Promise<any>;
+			update(id: TId, item: T): T;
 			remove(id: TId): void;
 		}
 		
@@ -20,6 +20,7 @@ declare namespace Waza {
 			private page;
 			hash: Hash;
 			viewLayout: string;
+			layout: string;
 			constructor(page: PageProvider);
 			getViewLayout(): string;
 			setViewLayout(pathuri: string, title: string, cb?: Function, resource?: any): void;
@@ -34,15 +35,15 @@ declare namespace Waza {
 			path: Path;
 			resources: any[];
 			constructor(layout: Layout);
-			init(layout: Layout): this;
 			displayLayout(layout: Layout, hashname: string, title?: string, callback?: Function): void;
 			getResources(): any[];
 			getLayout(): Layout;
 			setLayout(layout: Layout): void;
-			render(template: string, type: any, title?: string): void;
-			setResources(resource: ApplicationController): void;
+			render(template: string, title?: string, data?:any): void;
+			async handler(resource: ApplicationController, template: string)
+			setResources(resource: any): void;
 			static reload(layout: Layout, hash: string, title?: string): void;
-			setTemplate(template: string, clazz: any, title?: string): void;
+			setTemplate(template: string, clazz: any, hashname?: string): void;
 		}
 	}
 	
