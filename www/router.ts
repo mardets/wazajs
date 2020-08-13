@@ -1,5 +1,6 @@
 import { CacheTpl } from './view/templates';
 import { RouterProvider } from '../lib/provider/router';
+import { PackController } from './pack/pack.controller';
 
 export class Router extends RouterProvider {
   routes: any[];
@@ -14,8 +15,9 @@ export class Router extends RouterProvider {
   
   getRoutes(): any[] {
     return this.routes = [
-      { path: '/', component: this.load('', '') }, // Default
-      { path: '/home', component: this.load('home', 'Home') }
+      { path: '/', component: this.load('', '', this.templates) }, // Default
+      { path: '/home', component: this.load('home', 'Home', this.templates) },
+      { path: '/pack/list', component: this.load('pack', 'List', this.templates), handler: PackController.findAll }
     ]
   }
 

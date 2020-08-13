@@ -1,5 +1,5 @@
 import { HomeService } from './home.service';
-import { Home, HomeId } from './home';
+import { Home } from './home';
 import { AppController } from '../application.controller';
 import { ApplicationController } from "../../lib/application/controller/application";
 import { Layout } from '../../lib/application/layout/layout';
@@ -17,23 +17,23 @@ export class HomeController extends ApplicationController implements Application
 	this.hash.name = 'home';
   }
 
-  findById(id: number): Home {
-    return this.Service.findById(new HomeId(id));
+  findById(id: string): Home {
+    return this.Service.findById(id);
   }
 
   create(item: Home): void {
     this.Service.create(item);
   }
 
-  findAll(): Home[] {
+  findAll(): Promise<Home> {
     return this.Service.findAll();
   }
 
-  update(id: HomeId): Home {
+  update(id: string): Home {
     return this.Service.update(id);
   }
 
-  delete(id: HomeId): void {
+  delete(id: string): void {
     return this.Service.delete(id);
   }
   

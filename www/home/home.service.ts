@@ -1,11 +1,11 @@
 import { HomeRepository } from "./home.repository";
-import { Home, HomeId } from './home';
+import { Home } from './home';
 
-export class HomeService implements HomeRepository<Home, HomeId> {
+export class HomeService implements HomeRepository<Home> {
   constructor() {
   }
   
-  findById(id: HomeId): Home {
+  findById(id: string): Home {
     return;
   }
 
@@ -13,15 +13,15 @@ export class HomeService implements HomeRepository<Home, HomeId> {
     return;
   }
 
-  findAll(): Home[] {
+  findAll(): Promise<Home> {
     return;
   }
 
-  update(id: HomeId): Home {
+  update(id: string): Home {
     return;
   }
 
-  delete(id: HomeId): void {
+  delete(id: string): void {
     return;
   }
   
