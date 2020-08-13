@@ -29,7 +29,6 @@ export class ApplicationController {
   getResources(): any[] {
 	return this.resources;
   }
-  
   getLayout(): Layout {
 	  return this.layout;
   }
@@ -38,10 +37,25 @@ export class ApplicationController {
 	  this.layout = layout;
   }
   
-  render(template: string, title?: string) {
+  render(template: string, title?: string, data?:any) {
     var contentEl = window.document.querySelector('.ui-view');
     contentEl.innerHTML = template;
 	window.document.querySelector('title').textContent = title;
+  }
+  
+  async handler(resource: ApplicationController, template: string) {
+	let arrayRoutes = resource.getLayout().getPage().getRoute().getRoutes();
+	let routeResource = Helper.filter(arrayRoutes, '/' + resource.getLayout().hash.name);
+	if( routeResource === undefined) {
+		this.render('<p>404 page : the resource is not available</p>', '404 error');
+	} else {
+		if(routeResource.path !== '/') {
+			var response:any = await routeResource.handler();
+		}
+		
+		this.render(template, resource.location.title);
+		this.htmlMarkup('#list',response);
+	}
   }
   
   setResources(resource: any) {
@@ -57,17 +71,35 @@ export class ApplicationController {
   }
   
   setTemplate(template: string, clazz: any, hashname?:string) {
-	let resources = JSON.parse(localStorage.getItem('resources'));
+	let resources = clazz.instanceBuilder();
 	for (let i = 0; i < resources.length; i++) {
-      if (resources[i].hash.name.indexOf(hashname) === 0) {
-		if(clazz.constructor.name !== 'ApplicationController') {
-			clazz.render(template, resources[i].location.title);
-		} else {
-			clazz.prototype.render(template, resources[i].location.title);
-		}
+      if (resources[i].getLayout().hash.name.includes(resources[i].hash.name)) {
+		clazz.handler(resources[i], template);
         break;
       }
     }
 	return;
+  }
+  
+  /**
+  * Example case
+  */
+  htmlMarkup(style: string, data: any) {
+	 var markupEl = window.document.querySelector(style); 
+	 if(style.includes('list')) {
+		var ul = window.document.createElement('ul');
+		
+		for (let i=0; i < data.length; i++) {
+			let li = window.document.createElement('li');
+			let a = window.document.createElement('a');
+			
+			li.appendChild(a);
+			a.textContent = data[i].ref_pack;
+			ul.appendChild(li);
+			markupEl.appendChild(ul);
+		}
+		
+	 }
+	 
   }
 }

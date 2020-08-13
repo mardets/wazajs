@@ -1,3 +1,3 @@
 export interface ApplicationLayout {
-  render(template: string, title?: string): void;
+  render(template: string, clazz?: any): void;
 }

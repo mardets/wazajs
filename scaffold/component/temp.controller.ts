@@ -1,35 +1,37 @@
 import { <%= upParent %>Service } from './<%= name %>.service';
-import { <%= upCaseName %>, <%= upCaseName %>Id } from './<%= name %>';
-import { ApplicationController } from "../lib/application/controller/application";
-import { Layout } from '../application/layout/layout';
-import { ApplicationLayout } from "../application/layout/application";
+import { <%= upCaseName %> } from './<%= name %>';
+import { ApplicationController } from "../../lib/application/controller/application";
+import { AppController } from '../application.controller';
+import { ApplicationLayout } from "../../lib/application/layout/application";
+import { HttpProvider } from '../../lib/provider/http';
+import { Constants } from '../constants';
 
 export class <%= upCaseName %>Controller extends ApplicationController implements ApplicationLayout {
 
-  <%= parent %>Service: <%= upCaseName %>Service;
+  service: <%= upCaseName %>Service;
 
-  constructor(private layout: Layout) {
-    this.<%= parent %>Service = new <%= upCaseName %>Service();
+  constructor(layout: Layout) {
+    this.service = new <%= upCaseName %>Service();
   }
 
-  findById(id: number): <%= upCaseName %> {
-    return this.<%= parent %>Service.findById(new <%= upCaseName %>Id(id));
+  findById(id: string): <%= upCaseName %> {
+    return this.service.findById(new <%= upCaseName %>Id(id));
   }
 
   create(item: <%= upCaseName %>): <%= upCaseName %> {
-    return this.<%= parent %>Service.create();
+    return this.service.create();
   }
 
   findAll(): <%= upCaseName %>[] {
-    return this.<%= parent %>Service.findAll();
+    return this.service.findAll();
   }
 
-  update(id: <%= upCaseName %>Id): <%= upCaseName %> {
-    return this.<%= parent %>Service.update(id);
+  update(id: string): <%= upCaseName %> {
+    return this.service.update(id);
   }
 
-  delete(id: <%= upCaseName %>Id): void {
-    return this.<%= parent %>Service.delete(id);
+  delete(id: string): void {
+    return this.service.delete(id);
   }
   
   render(template: string, type: any) {

@@ -1,11 +1,12 @@
 import { <%= upCaseName %>Repository } from "./<%= name %>.repository";
-import { <%= upCaseName %>, <%= upCaseName %>Id } from './<%= name %>';
+import { <%= upCaseName %> } from './<%= name %>';
+import { HttpProvider } from '../../lib/provider/http';
 
-export class <%= upCaseName %>Service implements <%= upCaseName %>Repository<<%= upCaseName %>, <%= upCaseName %>Id> {
-  constructor() {
+export class <%= upCaseName %>Service implements <%= upCaseName %>Repository<<%= upCaseName %>> {
+  constructor(private http: HttpProvider) {
   }
   
-  findById(id: <%= upCaseName %>Id): <%= upCaseName %> {
+  findById(id: string): <%= upCaseName %> {
     return;
   }
 
@@ -17,11 +18,11 @@ export class <%= upCaseName %>Service implements <%= upCaseName %>Repository<<%=
     return;
   }
 
-  update(id: <%= upCaseName %>Id): <%= upCaseName %> {
+  update(id: string): <%= upCaseName %> {
     return;
   }
 
-  delete(id: <%= upCaseName %>Id): void {
+  delete(id: string): void {
     return;
   }
   

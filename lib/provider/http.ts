@@ -1,7 +1,7 @@
+
 export class HttpProvider {
 	
 	resource: any;
-	window: any;
 	
 	constructor(private config: any) {
 		this.resource = config;
@@ -32,35 +32,38 @@ export class HttpProvider {
       return queryString;
 	}
 	
-	fetch(path:string, collection:string, options:any): any {
-		let url = this.queryString(collection, path);
-		
-		let headers = {
-			'Content-Type': 'application/json',
-			'lang': 'en',
-			'api-key': this.getApiKey()
+	fetch(path:string, options:any, collection?:string): any {
+		let url = this.getAPIUrl() + path;
+		let mheaders = new Headers();
+		if(collection != "" && collection != undefined) {
+			url = this.queryString(collection, path);
+			mheaders.append("api-key", this.getApiKey());
 		}
 		
-		let config = { ...options, ...headers };
+		let init = {
+			method: options.method,
+			headers: mheaders,
+			mode: options.mode
+			
+		}
 		
-		return this.window.fetch(url, config)
-			   .then((response:any) => {
-				   if(response.ok ) {
-					   return response.json()
-				   }
-				   //throw new Error(r);
-			   })
+		
+		return fetch(url, init).then(function(response) {
+		  if(response.ok) {
+			  return response.json();
+		  } else {
+			  throw new Error("Request error");
+		  }
+		});
 	}
 	
-	request(path:string, collection:string, options:any): any {
-		let url = this.queryString(collection, path);
+	request(url:string, options:any, path?: string, collection? :string): any {
+		if(collection != "" && collection != undefined) {
+			url = this.queryString(collection, path);
+		}
 		
-		
-		return new this.window.Promise((resolve:any, reject:any) => {
-			const xhr = new this.window.XMLHttpRequest();
-			xhr.setRequestHeader('Content-Type', 'application/json');
-			xhr.setRequestHeader('lang', 'en');
-			xhr.setRequestHeader('api-key', this.getApiKey());
+		return new Promise((resolve, reject) => {
+			const xhr = new XMLHttpRequest();
 			if (options.method = 'GET') {
 				xhr.open(options.method, url);
 			}
@@ -71,5 +74,7 @@ export class HttpProvider {
 			xhr.onerror = () => reject(xhr.statusText);
 			xhr.send();
 		});
+		
+		
 	}
 }

@@ -10,8 +10,8 @@ export class RouterProvider {
     //this.getRoutes();
   }
 
-  load (pathDir: string, componentHTMLName: string) {
-    return pathDir == '' ? this.templates['layout\layout.html'] 
+  load (pathDir: string, componentHTMLName: string, templates: any) {
+    return pathDir == '' ? templates['layout\layout.html'] 
                       : this.checkingTpl(pathDir, componentHTMLName);
     
   }

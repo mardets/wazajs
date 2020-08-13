@@ -3,6 +3,14 @@ export class Util {
 	constructor() {
 	}
 	
+	static filter(array: any, path:string) {
+		for(let i=0; i < array.length; i++) {
+			if(array[i].path == path) {
+				return array[i];
+			}
+		}
+	}
+	
 	static xmlToJson(xml: any) {
 		var obj = {};
 		

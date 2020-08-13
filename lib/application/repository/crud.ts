@@ -1,7 +1,7 @@
-export default interface CrudRepository<T, TId> {
-  findById(id: TId): T;
+export default interface CrudRepository<T> {
+  findById(id: string): T;
   create(item: T): T;
-  findAll(): T[];
-  update(id: TId, item?: T): T;
-  delete(id: TId): void;
+  findAll(): Promise<any>;
+  update(id: string, item?: T): T;
+  delete(id: string): void;
 }

@@ -2,6 +2,19 @@ export class Helper {
 		
 	constructor() {
 	}
+	
+	static filter(array: any, path:string) {
+		for(let i=0; i < array.length; i++) {
+			if(window.location.hash.substring(1, window.location.hash.length) == path && typeof path.indexOf(path.length-1) == 'number' && path && typeof path.indexOf(path.length-1) != -1) {
+				return array[i];
+			} else {
+				if(array[i].path == path) {
+					return array[i];
+				} 
+			}
+			
+		}
+	}
 
 	static hashToControllerName(value: string) {
 		let strValue = '';
